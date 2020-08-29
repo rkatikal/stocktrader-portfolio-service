@@ -1,0 +1,15 @@
+# Source: traderlite/templates/portfolio.yaml
+#Deploy the service
+apiVersion: v1
+kind: Service
+metadata:
+  name: acmetrader-portfolio-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: acmetrader-portfolio

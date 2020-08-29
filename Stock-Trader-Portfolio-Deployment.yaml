@@ -1,0 +1,99 @@
+# Source: traderlite/templates/portfolio.yaml
+#       Copyright 2017 IBM Corp All Rights Reserved
+
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+
+#       http://www.apache.org/licenses/LICENSE-2.0
+
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+#Deploy the pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acmetrader-portfolio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: acmetrader-portfolio
+
+  template:
+    metadata:
+      labels:
+        app: acmetrader-portfolio
+        solution: acmetrader-lite-trader
+    spec:
+      containers:
+      - name: acmetrader-portfolio
+        image: "clouddragons/portfolio-spring-cp4i:1.1"
+        env:
+          - name: JDBC_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: mariadb.db.host
+          - name: JDBC_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: mariadb.db.port
+          - name: JDBC_DB
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: mariadb.db.name
+          - name: JDBC_ID
+            valueFrom:
+              secretKeyRef:
+                name: acmetrader-credentials
+                key: mariadb.db.id
+          - name: JDBC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: acmetrader-credentials
+                key: mariadb.db.pwd
+          - name: STOCK_QUOTE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: stockQuote.url
+          - name: TRADE_HISTORY_URL
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: tradeHistory.url
+          - name: EVENT_STREAMS_STATE
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: eventStreamsState
+          - name: SALESFORCE_INTEGRATION_STATE
+            valueFrom:
+              configMapKeyRef:
+                name: acmetrader-config
+                key: salesforceIntegrationState
+        ports:
+          - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /portfolio/readiness
+            port: 8080
+          initialDelaySeconds: 45
+          timeoutSeconds: 3
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 600m
+            memory: 500Mi
+          requests:
+            cpu: 600m
+            memory: 500Mi
+
+        imagePullPolicy: Always
